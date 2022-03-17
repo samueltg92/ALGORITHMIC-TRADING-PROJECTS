@@ -8,6 +8,14 @@ from backtesting import Strategy, Backtest
 from backtesting.lib import crossover
 import seaborn as sns
 
+'''
+Simple Moving Average Crossover Strategy
+Market: defined by user
+Entry: SMA(10) > SMA(20)
+Exit: SMA(10) < SMA(20)
+Optimization using other parameters
+'''
+
 pd.options.mode.chained_assignment = None
 
 # Creating DataFrame using Yahoo Finance
