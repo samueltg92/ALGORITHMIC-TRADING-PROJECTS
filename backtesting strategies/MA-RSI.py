@@ -42,3 +42,21 @@ bt = Backtest(df, MA_RSI, cash=10_000, commission=0.04, exclusive_orders=False)
 stats = bt.run()
 print(stats)
 bt.plot(plot_volume=False)
+
+
+# Optimizing the strategy
+print('*'*100)
+print('*'*100)
+print('OPTIMIZATION')
+print('*'*100)  
+op = bt.optimize(
+    sma_window = range(100,500),
+    rsi_window = range(10,14),
+    atr_window = range(10,20),
+    stop_loss = range(5,15),
+    maximize = 'Equity Final [$]'
+)
+print(op)
+print('*'*100)
+print(f'Stats Strategy: {stats._strategy}')
+print('*'*100)
