@@ -4,7 +4,7 @@ from strategy import MaRsiStrat
 
 cerebro = bt.Cerebro()
 
-data = bt.feeds.GenericCSVData(dataname= '/mnt/c/Users/samue/Documents/ALGORITHMIC-TRADING-PROJECTS/backtesting strategies/data_sets/EURUSD_Candlestick_15_M_BID_21.04.2004-16.04.2022-copy.csv',
+data = bt.feeds.GenericCSVData(dataname = '/mnt/c/Users/samue/Documents/ALGORITHMIC-TRADING-PROJECTS/backtesting strategies/data_sets/EURUSD_Candlestick_15_M_BID_21.04.2004-16.04.2022-copy.csv',
     name = 'EUR-USD 15min',
     fromdate = datetime.datetime(2004, 4, 21),
     todate = datetime.datetime(2022, 4, 16),
