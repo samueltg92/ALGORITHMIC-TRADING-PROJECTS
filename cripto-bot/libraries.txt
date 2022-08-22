@@ -1,0 +1,14 @@
+pipLibrerias que necesitamos
+
+simplemente ejecuta el comando siguiente:
+
+pip install <name>
+
+pandas	# manipular datos
+numpy	# manipular arrays
+sklearn	# uso de clusters en el capitulo de machine learning
+ccxt		# comunicacion con api de exchanges
+plotly		# graficas
+matplotlib	# graficas
+pandas_ta	# complemento de pandas para indicadores de analisis tecnico
+pyjuque	# gestion de ordenes y estrategias
