@@ -14,5 +14,5 @@ timeframe = '1h'
 ohlcv = exchange.fetch_ohlcv(symbol,timeframe)
 df = ccxt_ohlcv_to_dataframe(ohlcv)
 
-print(df.head())
-print(type(df[close][0]))
+print(df)
+print(type(df['close'][0]))
