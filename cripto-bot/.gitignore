@@ -1,2 +1,8 @@
 # Binance API keys
 .env
+
+# tutorial pandas ta
+pandasTAtutorial.py
+
+# pycache
+__pycache__
