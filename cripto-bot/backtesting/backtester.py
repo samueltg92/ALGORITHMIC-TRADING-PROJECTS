@@ -4,7 +4,7 @@ import numpy as np
 
 class Backtester():
     
-    def __init__(self, initial_balance = 10000, leverage = 10, trailing_sl = False, fee = 0.02, riskpct = 1):
+    def __init__(self, initial_balance = 10000, leverage = 10, trailing_sl = False, fee = 0.02, riskpct = 0.01):
         
         self.initial_balance = initial_balance
         self.balance = initial_balance
@@ -29,9 +29,38 @@ class Backtester():
         self.is_short_open = False
         
     
-    def open_position(self):
-        pass
-    
+    def open_position(self, price, side, from_opened = 0):
+        
+        self.num_trades += 1
+        
+        if side == 'long':
+            self.num_longs += 1
+            
+            if self.is_long_open:
+                self.long_open_price = (self.long_open_price + price) / 2
+                self.amount += self.riskpct / price
+            else:
+                self.is_long_open = True
+                self.long_open_price = price
+                self.amount = self.riskpct / price
+        
+        elif side == 'short':
+            self.num_shorts += 1
+               
+            if self.is_short_open:
+                self.short_open_price = (self.short_open_price + price) / 2
+                self.amount += self.riskpct / price
+            else:
+                self.is_short_open = True
+                self.short_open_price = price
+                self.amount = self.riskpct / price
+        
+        # self.amount = self.riskpct / price
+        
+        if self.trailing_sl:
+            self.from_opened = from_opened
+        
+            
     def close_position(self):
         pass
     
