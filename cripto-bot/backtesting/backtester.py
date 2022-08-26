@@ -106,5 +106,5 @@ class Backtester():
         elif self.is_short_open:
             self.stoploss_price = price * sl_short
     
-    def results(self, symbol, start_date, end_date):
-        pass 
+    def results(self):
+        qs.reports.full(self.pnl)
