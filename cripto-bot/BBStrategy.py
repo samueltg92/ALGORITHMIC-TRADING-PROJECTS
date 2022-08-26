@@ -10,9 +10,9 @@ ohlcv = exchange.fetch_ohlcv(symbol, timeframe)
 df = ccxt_ohlcv_to_dataframe(ohlcv)
 
 
-class BBStratetegy():
+class BBStrategy():
     
-    def __init__(self, bb_len, n_std, rsi_len, rsi_ob, rsi_os):
+    def __init__(self, bb_len=20, n_std=2.0, rsi_len=14, rsi_ob=60, rsi_os=40):
         self.bb_len = bb_len
         self.n_std = n_std
         self.rsi_len = rsi_len
@@ -60,7 +60,7 @@ class BBStratetegy():
             return True
         return False       
               
-strat = BBStratetegy(20,2.0,14,60,40)
+strat = BBStrategy(20,2.0,14,60,40)
 strat.setup(df)
 
 for i in range(len(df)):

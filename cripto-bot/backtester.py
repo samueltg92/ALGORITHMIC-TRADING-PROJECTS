@@ -20,8 +20,8 @@ class Backtester():
         
         self.pnl = []
         self.drawdown = []
-        self.wins = []
-        self.losses = []
+        self.wins = 0
+        self.losses = 0
         
         self.num_trades = 0
         self.num_longs = 0
@@ -30,6 +30,20 @@ class Backtester():
         self.is_long_open = False
         self.is_short_open = False
         
+    def reset_results(self):
+        
+        self.balance = self.initial_balance
+        self.amount = 0
+        self.pnl = []
+        self.drawdown = []
+        self.wins = 0
+        self.losses = 0
+        self.num_trades = 0
+        self.num_longs = 0
+        self.num_shorts = 0
+        self.is_long_open = False
+        self.is_short_open = False
+        self.from_opened = 0
     
     def open_position(self, price, side, from_opened = 0):
         
@@ -57,7 +71,7 @@ class Backtester():
                 self.short_open_price = price
                 self.amount = self.riskpct / price
         
-        # self.amount = self.riskpct / price
+        self.amount = self.riskpct / price
         
         if self.trailing_sl:
             self.from_opened = from_opened
@@ -107,4 +121,65 @@ class Backtester():
             self.stoploss_price = price * sl_short
     
     def results(self):
-        qs.reports.full(self.pnl)
+        
+        pct_change = (self.balance + self.pnl).pct_change()
+        results = qs.reports.full(pct_change)
+        
+        return results
+        
+    
+    def __backtesting__(self, df, strategy):
+        
+        high = df['high']
+        close = df['close']
+        low = df['low']
+        
+        for i in range(len(df)):
+            
+            if self.balance > 0:
+                
+                if strategy.checkLongSignal(i):
+                    self.open_position(price = close[i], side = 'long', from_opened = i)
+                    self.takeprofit(price = close[i], tp_long = 1.03)
+                    self.stoploss(price = close[i], sl_long = 0.99)
+                elif strategy.checkShortSignal(i):
+                    self.open_position(price = close[i], side = 'short', from_opened = i)
+                    self.takeprofit(price = close[i], tp_short = 0.97)
+                    self.stoploss(price = close[i], sl_short = 1.01)     
+                else:
+                    if self.trailing_sl and (self.is_long_open or self.is_short_open):
+                        new_max = high[self.from_opened : i].max()
+                        previous_sl = self.stoploss_price                        
+                        self.stoploss(price = new_max)
+                        
+                        if previous_sl > self.stoploss_price:
+                            self.stoploss_price = previous_sl
+                            
+                    if self.is_long_open:
+                        if high[i] >= self.takeprofit_price:
+                            self.close_position(price = self.takeprofit_price)    
+                        elif low[i] <= self.stoploss_price:
+                            self.close_position(price = self.stoploss_price)       
+                            
+                    elif self.is_short_open:
+                        if high[i] >= self.stoploss_price:
+                            self.close_position(price = self.stoploss_price)
+                        elif low[i] <= self.takeprofit_price:
+                            self.close_position(price = self.takeprofit_price)    
+                            
+from BBStrategy import BBStrategy                           
+import ccxt
+from utils import ccxt_ohlcv_to_dataframe
+
+exchange = ccxt.binance()
+symbol = 'BTC/USDT'
+timeframe = '1h'
+ohlcv = exchange.fetch_ohlcv(symbol,timeframe)
+df = ccxt_ohlcv_to_dataframe(ohlcv)
+
+strategy = BBStrategy()
+strategy.setup(df)
+
+tryback = Backtester()
+tryback.__backtesting__(df, strategy)
+print(tryback.results())
