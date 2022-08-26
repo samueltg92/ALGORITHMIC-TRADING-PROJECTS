@@ -21,8 +21,7 @@ class Backtester():
         self.pnl = []
         self.drawdown = []
         self.wins = 0
-        self.losses = 0
-        
+        self.losses = 0     
         self.num_trades = 0
         self.num_longs = 0
         self.num_shorts = 0
@@ -44,7 +43,7 @@ class Backtester():
         self.is_long_open = False
         self.is_short_open = False
         self.from_opened = 0
-    
+            
     def open_position(self, price, side, from_opened = 0):
         
         self.num_trades += 1
@@ -120,12 +119,13 @@ class Backtester():
         elif self.is_short_open:
             self.stoploss_price = price * sl_short
     
-    def results(self):
+    # def results(self):
         
-        pct_change = (self.balance + self.pnl).pct_change()
-        results = qs.reports.full(pct_change)
+    #     pct_change = pd.DataFrame(self.pnl, columns = ['pnl'])
+    #     pct_change['pct chng'] = pct_change['pnl'].pct_change()
+    #     results = qs.reports.full(pct_change)
         
-        return results
+    #     return results
         
     
     def __backtesting__(self, df, strategy):
@@ -182,4 +182,4 @@ strategy.setup(df)
 
 tryback = Backtester()
 tryback.__backtesting__(df, strategy)
-print(tryback.results())
+# print(tryback.results())
