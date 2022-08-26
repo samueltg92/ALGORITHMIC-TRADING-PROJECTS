@@ -1,6 +1,8 @@
 import pandas as pd
 import numpy as np
+import quantstats as qs
 
+qs.extend_pandas()
 
 class Backtester():
     
@@ -104,5 +106,5 @@ class Backtester():
         elif self.is_short_open:
             self.stoploss_price = price * sl_short
     
-    def results(self):
+    def results(self, symbol, start_date, end_date):
         pass 
