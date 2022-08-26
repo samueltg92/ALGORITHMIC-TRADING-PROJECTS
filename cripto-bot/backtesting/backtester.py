@@ -61,8 +61,32 @@ class Backtester():
             self.from_opened = from_opened
         
             
-    def close_position(self):
-        pass
+    def close_position(self, price):
+        
+        self.num_trades += 1
+        
+        if self.is_long_open:
+            result = self.amount * (self.long_open_price - price)
+            self.is_long_open = False
+            self.long_open_price = 0
+            
+        elif self.is_short_open:
+            result = self.amount * (price - self.short_open_price)
+            self.is_short_open = False
+            self.short_open_price = 0
+                
+        self.pnl.append(result)
+        self.balance += result
+        
+        if result > 0:
+            self.wins += 1
+            self.drawdown.append(0)
+        else:
+            self.losses += 1
+            self.drawdown.append(result)
+            
+        self.takeprofit_price = 0
+        self.stoploss_price = 0
     
     def takeprofit(self):
         pass
