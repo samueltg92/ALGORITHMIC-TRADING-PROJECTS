@@ -88,11 +88,21 @@ class Backtester():
         self.takeprofit_price = 0
         self.stoploss_price = 0
     
-    def takeprofit(self):
-        pass
+    def takeprofit(self, price, tp_long = 1.01, tp_short = 0.99):
+        
+        if self.is_long_open:
+            self.takeprofit_price = price * tp_long
+            
+        elif self.is_short_open:
+            self.takeprofit_price = price * tp_short
     
-    def stoploss(self):
-        pass
+    def stoploss(self, price, sl_long = 0.99, sl_short = 1.01):
+        
+        if self.is_long_open:
+            self.stoploss_price = price * sl_long
+        
+        elif self.is_short_open:
+            self.stoploss_price = price * sl_short
     
     def results(self):
         pass 
