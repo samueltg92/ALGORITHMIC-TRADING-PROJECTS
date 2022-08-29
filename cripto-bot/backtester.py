@@ -1,6 +1,15 @@
 import pandas as pd
 import numpy as np
-import quantstats as qs
+import quantstats as qsc
+from BBStrategy import BBStrategy                           
+import ccxt
+from utils import ccxt_ohlcv_to_dataframe
+
+exchange = ccxt.binance()
+symbol = 'BTC/USDT'
+timeframe = '1h'
+ohlcv = exchange.fetch_ohlcv(symbol,timeframe)
+df = ccxt_ohlcv_to_dataframe(ohlcv)
 
 qs.extend_pandas()
 
@@ -90,7 +99,7 @@ class Backtester():
             self.is_short_open = False
             self.short_open_price = 0
                 
-        self.pnl.append(result)
+        self.pnl.append(result) # acá puedo buscar agregar la fecha en la que se generó ese PNL
         self.balance += result
         
         if result > 0:
@@ -119,11 +128,11 @@ class Backtester():
         elif self.is_short_open:
             self.stoploss_price = price * sl_short
     
-    # def results(self):
+    # def results(self, time):
         
-    #     pct_change = pd.DataFrame(self.pnl, columns = ['pnl'])
-    #     pct_change['pct chng'] = pct_change['pnl'].pct_change()
-    #     results = qs.reports.full(pct_change)
+    #     df2 = pd.DataFrame(self.pnl, index = ['time'] , columns = ['pnl'])
+    #     df2['pct chng'] = df2['pnl'].pct_change()
+    #     results = qs.reports.full(df2)
         
     #     return results
         
@@ -146,6 +155,7 @@ class Backtester():
                     self.open_position(price = close[i], side = 'short', from_opened = i)
                     self.takeprofit(price = close[i], tp_short = 0.97)
                     self.stoploss(price = close[i], sl_short = 1.01)     
+                
                 else:
                     if self.trailing_sl and (self.is_long_open or self.is_short_open):
                         new_max = high[self.from_opened : i].max()
@@ -167,15 +177,7 @@ class Backtester():
                         elif low[i] <= self.takeprofit_price:
                             self.close_position(price = self.takeprofit_price)    
                             
-from BBStrategy import BBStrategy                           
-import ccxt
-from utils import ccxt_ohlcv_to_dataframe
 
-exchange = ccxt.binance()
-symbol = 'BTC/USDT'
-timeframe = '1h'
-ohlcv = exchange.fetch_ohlcv(symbol,timeframe)
-df = ccxt_ohlcv_to_dataframe(ohlcv)
 
 strategy = BBStrategy()
 strategy.setup(df)
@@ -183,3 +185,12 @@ strategy.setup(df)
 tryback = Backtester()
 tryback.__backtesting__(df, strategy)
 # print(tryback.results())
+
+
+# para ver los reusltados debo crear un dict con las fechas donde se hicieron los profits 
+# y con los profits, luego hacer un dataframe con ese dict y luego aplicarle un pct_change
+# a la columna 'pnl' para luego aplicar la función de quantstats.
+
+# la otra forma es ver en que punto puedo poner la lista de 'pnl' y convertirla a dataframe
+# para luego poner como indice las fechas en las que se produjo ese profit and loss.
+# luego aplicarle la función de quantstats. 
