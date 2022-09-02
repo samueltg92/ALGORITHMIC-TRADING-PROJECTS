@@ -1,6 +1,6 @@
 import pandas as pd
 import numpy as np
-import quantstats as qsc
+# import quantstats as qs
 from BBStrategy import BBStrategy                           
 import ccxt
 from utils import ccxt_ohlcv_to_dataframe
@@ -11,7 +11,7 @@ timeframe = '1h'
 ohlcv = exchange.fetch_ohlcv(symbol,timeframe)
 df = ccxt_ohlcv_to_dataframe(ohlcv)
 
-qs.extend_pandas()
+# qs.extend_pandas()
 
 class Backtester():
     
@@ -128,15 +128,37 @@ class Backtester():
         elif self.is_short_open:
             self.stoploss_price = price * sl_short
     
-    # def results(self, time):
+    def results(self, symbol, start_date, end_date):
         
-    #     df2 = pd.DataFrame(self.pnl, index = ['time'] , columns = ['pnl'])
-    #     df2['pct chng'] = df2['pnl'].pct_change()
-    #     results = qs.reports.full(df2)
+        profit = sum(self.pnl)
+        drawdown = sum(self.drawdown)
+        fees = (abs(profit) * self.fee * self.num_trades)
+        results = {
+            'symbol': symbol,
+            'start_date': start_date,
+            'end_date': end_date,
+            'balance': float(self.balance),
+            'profit': profit,
+            'drawdown': drawdown,
+            'net profit': float(profit-fees),
+            'num_trades': self.num_trades,
+            'num_longs': self.num_longs,
+            'num_shorts': self.num_shorts,
+            'wins': self.wins,
+            'losses': self.losses,
+                    }
         
-    #     return results
+        if self.num_trades > 0:
+            winrate = self.wins /self.num_trades
+            results['winrate'] = winrate
+            results['fitness'] = ((profit - abs(drawdown)) * winrate) / self.num_trades
         
-    
+        else:
+            results['winrate'] = 0
+            results['fitness'] = 0
+        
+        return results
+        
     def __backtesting__(self, df, strategy):
         
         high = df['high']
@@ -184,9 +206,14 @@ strategy.setup(df)
 
 tryback = Backtester()
 tryback.__backtesting__(df, strategy)
-# print(tryback.results())
+print(tryback.results())
 
 
+
+
+
+
+#------------------------------------------------------------------------------------------
 # para ver los reusltados debo crear un dict con las fechas donde se hicieron los profits 
 # y con los profits, luego hacer un dataframe con ese dict y luego aplicarle un pct_change
 # a la columna 'pnl' para luego aplicar la función de quantstats.
