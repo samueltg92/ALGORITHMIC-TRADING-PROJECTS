@@ -8,7 +8,7 @@ from utils import ccxt_ohlcv_to_dataframe
 exchange = ccxt.binance()
 symbol = 'BTC/USDT'
 timeframe = '1h'
-ohlcv = exchange.fetch_ohlcv(symbol,timeframe)
+ohlcv = exchange.fetch_ohlcv(symbol,timeframe, 1000)
 df = ccxt_ohlcv_to_dataframe(ohlcv)
 
 # qs.extend_pandas()
