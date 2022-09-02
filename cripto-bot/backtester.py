@@ -206,7 +206,7 @@ strategy.setup(df)
 
 tryback = Backtester()
 tryback.__backtesting__(df, strategy)
-print(tryback.results())
+print(tryback.results(symbol = '-', start_date = '-', end_date = '-'))
 
 
 
