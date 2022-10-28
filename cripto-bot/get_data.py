@@ -8,7 +8,7 @@ print(ccxt.exchanges)
 public = os.getenv('PUBLIC1')
 private = os.getenv('SECRET1')
 
-binance = ccxt.binance({
+binance = ccxt.binanceusdm({
     'apiKey': public,
     'secret': private,
     'timeout': 3000,
