@@ -12,7 +12,7 @@ api_secret = 'p7VN6HHKR6ZtGkfEeZC3FongJPkR2yr7AjPtPDC8IeaOkASdKZYCKyTuiIfGw57q'
 client = Client(api_key, api_secret)
 
 # Obtención de los datos históricos de precios de Bitcoin de 1 minuto
-klines = client.get_historical_klines("BTCUSDT", Client.KLINE_INTERVAL_15MINUTE, "10 years ago UTC") # intervalo de 15minutos a 10 años
+klines = client.get_historical_klines("BTCUSDT", Client.KLINE_INTERVAL_15MINUTE, "13 years ago UTC") # intervalo de 15minutos a 10 años
 
 # Conversión de los datos a un dataframe de pandas
 data = pd.DataFrame(klines, columns=['timestamp', 'open', 'high', 'low', 'close', 'volume', 'close_time', 'quote_asset_volume', 'number_of_trades', 'taker_buy_base_asset_volume', 'taker_buy_quote_asset_volume', 'ignore'])
@@ -66,7 +66,7 @@ while True:
     resultados.to_csv("Resultados_RN_BTC.csv", index=False)
 
     #time.sleep(60*60)  # Esperamos una hora antes de realizar la siguiente predicción
-    #time.sleep(60*15)  # Esperamos 15min antes de realizar la siguiente predicción acá con lo de thiago
-    time.sleep(60*1)  # Esperamos 1min antes de realizar la siguiente prediccións
+    time.sleep(60*15)  # Esperamos 15min antes de realizar la siguiente predicción acá con lo de thiago
+    #time.sleep(60*1)  # Esperamos 1min antes de realizar la siguiente prediccións
 
     
