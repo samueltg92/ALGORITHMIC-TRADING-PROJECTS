@@ -12,7 +12,7 @@ api_secret = 'p7VN6HHKR6ZtGkfEeZC3FongJPkR2yr7AjPtPDC8IeaOkASdKZYCKyTuiIfGw57q'
 client = Client(api_key, api_secret)
 
 # Obtención de los datos históricos de precios de Bitcoin de 1 minuto
-klines = client.get_historical_klines("BTCUSDT", Client.KLINE_INTERVAL_15MINUTE, "13 years ago UTC") # intervalo de 15minutos a 10 años
+klines = client.get_historical_klines("BTCUSDT", Client.KLINE_INTERVAL_1HOUR, "13 years ago UTC") # intervalo de 15minutos a 10 años
 
 # Conversión de los datos a un dataframe de pandas
 data = pd.DataFrame(klines, columns=['timestamp', 'open', 'high', 'low', 'close', 'volume', 'close_time', 'quote_asset_volume', 'number_of_trades', 'taker_buy_base_asset_volume', 'taker_buy_quote_asset_volume', 'ignore'])
@@ -27,10 +27,10 @@ min_value = data['close'].min()
 data['close'] = (data['close'] - min_value) / (max_value - min_value)
 
 # Procesamiento de los datos para la entrada del modelo
-data['t-1'] = data['close'].shift(1)
+data['t-24'] = data['close'].shift(24)
 data.dropna(inplace=True)
 
-X = np.array(data[['close', 't-1']])
+X = np.array(data[['close', 't-24']])
 X = np.reshape(X, (X.shape[0], X.shape[1], 1))
 
 # Carga del modelo entrenado
@@ -41,15 +41,20 @@ resultados = pd.DataFrame(columns=['timestamp', 'actual_price', 'predicted_price
 
 # Predicción del precio de Bitcoin en tiempo real
 while True:
-    kline = client.get_klines(symbol='BTCUSDT', interval=Client.KLINE_INTERVAL_15MINUTE)[-2] #intervalo de 15minutos
+    kline = client.get_klines(symbol='BTCUSDT', interval=Client.KLINE_INTERVAL_1MINUTE)[-2] #intervalo de 15minutos
     timestamp = kline[0]
     close_price = float(kline[4])
 
-    data = data._append({'timestamp': pd.to_datetime(timestamp, unit='ms'), 'close': close_price}, ignore_index=True)
-    data['close'] = (data['close'] - min_value) / (max_value - min_value)
-    data['t-1'] = data['close'].shift(1)
-    data.dropna(inplace=True)  # Eliminamos la primera fila que ya no es necesaria
-    X = np.array(data[['close', 't-1']])
+    # Normalizamos el nuevo precio de cierre
+    normalized_close_price = (close_price - min_value) / (max_value - min_value)
+
+    new_data = pd.DataFrame({'timestamp': [pd.to_datetime(timestamp, unit='ms')], 'close': [normalized_close_price]})
+    new_data['t-24'] = new_data['close'].shift(24)
+    new_data.dropna(inplace=True)  # Eliminamos la primera fila que ya no es necesaria
+    
+    data = pd.concat([data, new_data])
+    
+    X = np.array(data[['close', 't-24']])
     X = np.reshape(X, (X.shape[0], X.shape[1], 1))
 
     yhat = model.predict(X[-1].reshape(1, X[-1].shape[0], X[-1].shape[1]))
@@ -66,7 +71,5 @@ while True:
     resultados.to_csv("Resultados_RN_BTC.csv", index=False)
 
     #time.sleep(60*60)  # Esperamos una hora antes de realizar la siguiente predicción
-    time.sleep(60*15)  # Esperamos 15min antes de realizar la siguiente predicción acá con lo de thiago
-    #time.sleep(60*1)  # Esperamos 1min antes de realizar la siguiente prediccións
-
-    
+    #time.sleep(60*15)  # Esperamos 15min antes de realizar la siguiente predicción acá con lo de thiago
+    time.sleep(60*1)  # Esperamos 1min antes de realizar la siguiente prediccións
