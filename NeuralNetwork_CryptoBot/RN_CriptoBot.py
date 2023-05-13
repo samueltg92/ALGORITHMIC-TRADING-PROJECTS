@@ -34,7 +34,7 @@ X = np.array(data[['close', 't-24']])
 X = np.reshape(X, (X.shape[0], X.shape[1], 1))
 
 # Carga del modelo entrenado
-model = keras.models.load_model('ruta/para/guardar/el/modelo/btc_price_prediction_model.h5')
+model = keras.models.load_model('modelos de entrenamiento/btc_price_prediction_model.h5')
 
 # Creación del archivo de resultados
 resultados = pd.DataFrame(columns=['timestamp', 'actual_price', 'predicted_price'])
@@ -68,7 +68,7 @@ while True:
     resultados = resultados._append({"timestamp": now.strftime("%Y-%m-%d %H:%M:%S"),"Actual Price": close_price, "Predicted Price": predicted_price}, ignore_index=True)
 
     # Guardamos el dataframe en un archivo CSV
-    resultados.to_csv("Resultados_RN_BTC.csv", index=False)
+    resultados.to_csv("Resultados_RN_BTC_1HourInterval_13YearHistorical_100epochs_20batch_mse_adam_50LSTM.csv", index=False)
 
     #time.sleep(60*60)  # Esperamos una hora antes de realizar la siguiente predicción
     #time.sleep(60*15)  # Esperamos 15min antes de realizar la siguiente predicción acá con lo de thiago
