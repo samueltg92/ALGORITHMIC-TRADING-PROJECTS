@@ -27,49 +27,41 @@ min_value = data['close'].min()
 data['close'] = (data['close'] - min_value) / (max_value - min_value)
 
 # Procesamiento de los datos para la entrada del modelo
-data['t-48'] = data['close'].shift(48)
+data['next_close'] = data['close'].shift(-1)  # Cambio importante: usamos el próximo cierre como objetivo
 data.dropna(inplace=True)
 
-X = np.array(data[['close', 't-48']])
+X = np.array([data['close'].values[i-48:i] for i in range(48, len(data))])  # Cambio importante: creamos secuencias de 48 pasos
 X = np.reshape(X, (X.shape[0], X.shape[1], 1))
 
 # Carga del modelo entrenado
-model = keras.models.load_model('modelos de entrenamiento/btc_price_prediction_model.h5')
+model = keras.models.load_model('modelos de entrenamiento/btc_price_prediction_model_copy.h5')
 
 # Creación del archivo de resultados
 resultados = pd.DataFrame(columns=['timestamp', 'actual_price', 'predicted_price'])
 
 # Predicción del precio de Bitcoin en tiempo real
 while True:
-    kline = client.get_klines(symbol='BTCUSDT', interval=Client.KLINE_INTERVAL_1HOUR)[-2]
-    timestamp = kline[0]
-    close_price = float(kline[4])
-
+    kline = client.get_klines(symbol='BTCUSDT', interval=Client.KLINE_INTERVAL_1HOUR)[-49:-1]  # Cambio importante: obtenemos los últimos 48 cierres
+    timestamp = kline[-1][0]
+    close_price = float(kline[-1][4])
+    
     # Normalizamos el nuevo precio de cierre
-    normalized_close_price = (close_price - min_value) / (max_value - min_value)
-
-    new_data = pd.DataFrame({'timestamp': [pd.to_datetime(timestamp, unit='ms')], 'close': [normalized_close_price]})
-    new_data['t-48'] = new_data['close'].shift(48)
-    new_data.dropna(inplace=True)  # Eliminamos la primera fila que ya no es necesaria
+    normalized_close_price = [(float(k[4]) - min_value) / (max_value - min_value) for k in kline]
     
-    data = pd.concat([data, new_data])
+    new_data = np.array(normalized_close_price).reshape(1, 48, 1)  # Cambio importante: creamos una secuencia de 48 pasos
     
-    X = np.array(data[['close', 't-48']])
-    X = np.reshape(X, (X.shape[0], X.shape[1], 1))
+    yhat = model.predict(new_data)
 
-    yhat = model.predict(X[-1].reshape(1, X[-1].shape[0], X[-1].shape[1]))
     predicted_price = yhat[0][0] * (max_value - min_value) + min_value
-    
+
     now = datetime.now()
     print(f'{now.strftime("%Y-%m-%d %H:%M:%S")}, Actual price: {close_price:.2f}, Predicted price: {predicted_price:.2f}')
     #print(f'Actual price: {close_price:.2f}, Predicted price: {predicted_price:.2f}')
-    
+
     # Agregamos los resultados al dataframe
-    resultados = resultados._append({"timestamp": now.strftime("%Y-%m-%d %H:%M:%S"),"Actual Price": close_price, "Predicted Price": predicted_price}, ignore_index=True)
+    resultados = resultados._append({"timestamp": now.strftime("%Y-%m-%d %H:%M:%S"),"actual_price": close_price, "predicted_price": predicted_price}, ignore_index=True)
 
     # Guardamos el dataframe en un archivo CSV
-    resultados.to_csv("Resultados_RN_BTC_1HourInterval_13YearHistorical_100epochs_20batch_mse_adam_50LSTM.csv", index=False)
+    resultados.to_csv("Resultados_RN_BTC_1HourInterval_13YearHistorical_100epochs_20batch_mse_adam_50LSTM_copy.csv", index=False)
 
     time.sleep(60*60)  # Esperamos una hora antes de realizar la siguiente predicción
-    #time.sleep(60*15)  # Esperamos 15min antes de realizar la siguiente predicción acá con lo de thiago
-    #time.sleep(60*1)  # Esperamos 1min antes de realizar la siguiente prediccións
