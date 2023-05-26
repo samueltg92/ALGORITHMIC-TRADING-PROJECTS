@@ -27,10 +27,10 @@ min_value = data['close'].min()
 data['close'] = (data['close'] - min_value) / (max_value - min_value)
 
 # Procesamiento de los datos para la entrada del modelo
-data['t-48'] = data['close'].shift(48)
+data['t-24'] = data['close'].shift(24)
 data.dropna(inplace=True)
 
-X = np.array(data[['close', 't-48']])
+X = np.array(data[['close', 't-24']])
 X = np.reshape(X, (X.shape[0], X.shape[1], 1))
 
 # Carga del modelo entrenado
@@ -41,7 +41,7 @@ resultados = pd.DataFrame(columns=['timestamp', 'actual_price', 'predicted_price
 
 # Predicción del precio de Bitcoin en tiempo real
 while True:
-    kline = client.get_klines(symbol='BTCUSDT', interval=Client.KLINE_INTERVAL_1HOUR)[-2]
+    kline = client.get_klines(symbol='BTCUSDT', interval=Client.KLINE_INTERVAL_1MINUTE)[-2] #intervalo de 15minutos
     timestamp = kline[0]
     close_price = float(kline[4])
 
@@ -49,12 +49,12 @@ while True:
     normalized_close_price = (close_price - min_value) / (max_value - min_value)
 
     new_data = pd.DataFrame({'timestamp': [pd.to_datetime(timestamp, unit='ms')], 'close': [normalized_close_price]})
-    new_data['t-48'] = new_data['close'].shift(48)
+    new_data['t-24'] = new_data['close'].shift(24)
     new_data.dropna(inplace=True)  # Eliminamos la primera fila que ya no es necesaria
     
     data = pd.concat([data, new_data])
     
-    X = np.array(data[['close', 't-48']])
+    X = np.array(data[['close', 't-24']])
     X = np.reshape(X, (X.shape[0], X.shape[1], 1))
 
     yhat = model.predict(X[-1].reshape(1, X[-1].shape[0], X[-1].shape[1]))
@@ -70,6 +70,6 @@ while True:
     # Guardamos el dataframe en un archivo CSV
     resultados.to_csv("Resultados_RN_BTC_1HourInterval_13YearHistorical_100epochs_20batch_mse_adam_50LSTM.csv", index=False)
 
-    time.sleep(60*60)  # Esperamos una hora antes de realizar la siguiente predicción
+    #time.sleep(60*60)  # Esperamos una hora antes de realizar la siguiente predicción
     #time.sleep(60*15)  # Esperamos 15min antes de realizar la siguiente predicción acá con lo de thiago
-    #time.sleep(60*1)  # Esperamos 1min antes de realizar la siguiente prediccións
+    time.sleep(60*1)  # Esperamos 1min antes de realizar la siguiente prediccións

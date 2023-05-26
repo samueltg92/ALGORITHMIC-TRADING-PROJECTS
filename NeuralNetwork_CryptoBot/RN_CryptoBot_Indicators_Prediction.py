@@ -1,3 +1,6 @@
+import os
+os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
+import tensorflow as tf
 import time
 import numpy as np
 import pandas as pd
@@ -11,6 +14,7 @@ import joblib
 import warnings
 from sklearn.exceptions import DataConversionWarning
 warnings.filterwarnings(action='ignore', category=UserWarning)
+warnings.filterwarnings('ignore', category=RuntimeWarning)
 
 
 # Conexión a la API de Binance
@@ -29,6 +33,17 @@ data['open'] = data['open'].astype(float)
 data['high'] = data['high'].astype(float)
 data['low'] = data['low'].astype(float)
 data['close'] = data['close'].astype(float)
+
+# Primero, reemplaza cualquier valor infinito en tus datos con NaN
+data.replace([np.inf, -np.inf], np.nan, inplace=True)
+
+# Ahora, reemplaza cualquier cero en tus columnas 'high', 'low' y 'close' con NaN 
+# (asumiendo que los ceros no son válidos en estos contextos)
+for col in ['high', 'low', 'close']:
+    data[col].replace(0, np.nan, inplace=True)
+
+# Ahora, rellena cualquier NaN en tus datos con el valor previo
+data.fillna(method='ffill', inplace=True)
 
 # Calcula los indicadores técnicos
 data['momentum'] = ta.momentum.roc(data['close'], fillna=True)
@@ -66,6 +81,17 @@ while True:
     data['high'] = data['high'].astype(float)
     data['low'] = data['low'].astype(float)
     data['close'] = data['close'].astype(float)
+    
+    # Primero, reemplaza cualquier valor infinito en tus datos con NaN
+    data.replace([np.inf, -np.inf], np.nan, inplace=True)
+
+    # Ahora, reemplaza cualquier cero en tus columnas 'high', 'low' y 'close' con NaN 
+    # (asumiendo que los ceros no son válidos en estos contextos)
+    for col in ['high', 'low', 'close']:
+        data[col].replace(0, np.nan, inplace=True)
+
+    # Ahora, rellena cualquier NaN en tus datos con el valor previo
+    data.fillna(method='ffill', inplace=True)
 
     # Calcula los indicadores técnicos
     data['momentum'] = ta.momentum.roc(data['close'], fillna=True)
@@ -97,5 +123,5 @@ while True:
     # Guardamos el dataframe en un archivo CSV
     resultados.to_csv("Resultados_RN_BTC_1HourInterval_13YearHistorical_100epochs_20batch_mse_adam_50LSTM_copy.csv", index=False)
 
-    time.sleep(60*60)  # Esperamos una hora antes de realizar la predicción
+    time.sleep(60*60)  # Esperamos un día antes de realizar la predicción
 
