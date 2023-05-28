@@ -1,6 +1,8 @@
 import os
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
 import tensorflow as tf
+from sklearn.metrics import mean_absolute_error, mean_squared_error, r2_score, mean_absolute_percentage_error
+import numpy as np
 import time
 import numpy as np
 import pandas as pd
@@ -68,7 +70,11 @@ X = np.reshape(X, (X.shape[0], X.shape[1], X.shape[2]))
 model = keras.models.load_model('modelos de entrenamiento/btc_price_prediction_model_Indicators_copy.h5')
 
 # Creación del archivo de resultados
-resultados = pd.DataFrame(columns=['timestamp', 'actual_price', 'predicted_price'])
+resultados = pd.DataFrame(columns=['timestamp', 'actual_price', 'predicted_price', 'MAE', 'MSE', 'RMSE', 'R2', 'MAPE'])
+
+# Creación de listas vacías para almacenar las predicciones y los valores reales
+y_true = []
+y_pred = []
 
 # Predicción del precio de Bitcoin en tiempo real
 while True:
@@ -114,14 +120,25 @@ while True:
     predicted_price = scalers['close'].inverse_transform(yhat)[0][0]
     close_price = scalers['close'].inverse_transform(np.array(close_price).reshape(-1, 1)).item()  # Desnormalizar el precio actual
 
+    # Agrega los valores reales y las predicciones a las listas
+    y_true.append(close_price)
+    y_pred.append(predicted_price)
+
+    # Calcula las métricas y las imprime
+    mae = mean_absolute_error(y_true, y_pred)
+    mse = mean_squared_error(y_true, y_pred)
+    rmse = np.sqrt(mse)
+    r2 = r2_score(y_true, y_pred)
+    mape = mean_absolute_percentage_error(y_true, y_pred)
+
     now = datetime.now()
-    print(f'{now.strftime("%Y-%m-%d %H:%M:%S")}, Actual price: {close_price:.2f}, Predicted price: {predicted_price:.2f}')
+    print(f'{now.strftime("%Y-%m-%d %H:%M:%S")}, Actual price: {close_price:.2f}, Predicted price: {predicted_price:.2f}, MAE: {mae:.2f}, MSE: {mse:.2f}, RMSE: {rmse:.2f}, R2: {r2:.2f}, MAPE: {mape:.2f}')
 
     # Agregamos los resultados al dataframe
-    resultados = resultados._append({"timestamp": now.strftime("%Y-%m-%d %H:%M:%S"),"actual_price": close_price, "predicted_price": predicted_price}, ignore_index=True)
+    resultados = resultados._append({"timestamp": now.strftime("%Y-%m-%d %H:%M:%S"),"actual_price": close_price, "predicted_price": predicted_price, "MAE": mae, "MSE": mse, "RMSE": rmse, "R2": r2, "MAPE": mape}, ignore_index=True)
 
     # Guardamos el dataframe en un archivo CSV
-    resultados.to_csv("Resultados_RN_BTC_1HourInterval_13YearHistorical_100epochs_20batch_mse_adam_50LSTM_copy.csv", index=False)
+    resultados.to_csv("Resultados_RN_BTC_1HourInterval_13YearHistorical_100epochs_20batch_mse_adam_50LSTM_Indicators_metrics.csv", index=False)
 
     time.sleep(60*60)  # Esperamos un día antes de realizar la predicción
 
