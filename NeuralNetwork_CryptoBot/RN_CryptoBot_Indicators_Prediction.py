@@ -20,8 +20,8 @@ warnings.filterwarnings('ignore', category=RuntimeWarning)
 
 
 # Conexión a la API de Binance
-api_key = 'T4Bw573BSJCbaHscSo8jn37lE1SOoGsNircF8f7B061WIKBxNkP5nx68vvAev9uk'
-api_secret = 'p7VN6HHKR6ZtGkfEeZC3FongJPkR2yr7AjPtPDC8IeaOkASdKZYCKyTuiIfGw57q'
+api_key = 'api_key'
+api_secret = 'api_secret'
 client = Client(api_key, api_secret)
 
 # Obtención de los datos históricos de precios de Bitcoin de 1 minuto
