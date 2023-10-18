@@ -6,7 +6,6 @@ import numpy as np
 import time
 import numpy as np
 import pandas as pd
-import matplotlib.pyplot as plt
 from binance.client import Client
 from tensorflow import keras
 from datetime import datetime
@@ -25,7 +24,7 @@ api_secret = 'your_api_secret'
 client = Client(api_key, api_secret)
 
 # Obtención de los datos históricos de precios de Bitcoin de 1 minuto
-klines = client.get_historical_klines("BTCUSDT", Client.KLINE_INTERVAL_1HOUR, "1 year ago UTC")
+klines = client.get_historical_klines("BTCUSDT", Client.KLINE_INTERVAL_1day, "10 years ago UTC")
 
 # Conversión de los datos a un dataframe de pandas
 data = pd.DataFrame(klines, columns=['timestamp', 'open', 'high', 'low', 'close', 'volume', 'close_time', 'quote_asset_volume', 'number_of_trades', 'taker_buy_base_asset_volume', 'taker_buy_quote_asset_volume', 'ignore'])
@@ -79,7 +78,7 @@ y_pred = []
 # Predicción del precio de Bitcoin en tiempo real
 while True:
 
-    klines = client.get_klines(symbol='BTCUSDT', interval=Client.KLINE_INTERVAL_1HOUR)[-49:-1]
+    klines = client.get_klines(symbol='BTCUSDT', interval=Client.KLINE_INTERVAL_1DAY)[-49:-1]
     data = pd.DataFrame(klines, columns=['timestamp', 'open', 'high', 'low', 'close', 'volume', 'close_time', 'quote_asset_volume', 'number_of_trades', 'taker_buy_base_asset_volume', 'taker_buy_quote_asset_volume', 'ignore'])
 
     # Conversión de los precios a float
@@ -117,8 +116,8 @@ while True:
 
     yhat = model.predict(X)
 
-    predicted_price = scalers['close'].inverse_transform(yhat)[0][0]
-    close_price = scalers['close'].inverse_transform(np.array(close_price).reshape(-1, 1)).item()  # Desnormalizar el precio actual
+    predicted_price = scalers['close'].inverse_transform(yhat)[0]#[0]
+    close_prices = scalers['close'].inverse_transform(data[['close']].tail(30).values)  # Precios reales de los siguientes 30 días -- # close_price = scalers['close'].inverse_transform(np.array(close_price).reshape(-1, 1)).item()  # Desnormalizar el precio actual
 
     # Agregar los valores reales y las predicciones a las listas
     y_true.append(close_price)
@@ -132,7 +131,7 @@ while True:
     mape = mean_absolute_percentage_error(y_true, y_pred)
 
     now = datetime.now()
-    print(f'{now.strftime("%Y-%m-%d %H:%M:%S")}, Actual price: {close_price:.2f}, Predicted price: {predicted_price:.2f}, MAE: {mae:.2f}, MSE: {mse:.2f}, RMSE: {rmse:.2f}, R2: {r2:.2f}, MAPE: {mape:.2f}')
+    print(f'{now.strftime("%Y-%m-%d %H:%M:%S")}, Actual price for the next 30 days: {close_price:.2f}, Predicted price for the next 30 days: {predicted_price:.2f}, MAE: {mae:.2f}, MSE: {mse:.2f}, RMSE: {rmse:.2f}, R2: {r2:.2f}, MAPE: {mape:.2f}')
 
     # Agregar los resultados al dataframe
     resultados = resultados._append({"timestamp": now.strftime("%Y-%m-%d %H:%M:%S"),"actual_price": close_price, "predicted_price": predicted_price, "MAE": mae, "MSE": mse, "RMSE": rmse, "R2": r2, "MAPE": mape}, ignore_index=True)
@@ -140,5 +139,5 @@ while True:
     # Guardar el dataframe en un archivo CSV
     resultados.to_csv("Resultados_RN_BTC_1HourInterval_13YearHistorical_100epochs_20batch_mse_adam_50LSTM_Indicators_metrics.csv", index=False)
 
-    time.sleep(60*60)  # Esperar un minuto antes de realizar la predicción
+    time.sleep(60*1)  # Esperar un minuto antes de realizar la predicción
 
